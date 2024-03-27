@@ -1,0 +1,52 @@
+[
+	{
+		"id": 1,
+		"name": "Bathroom faucet",
+		"sku": "12345"
+	},
+	{
+		"id": 2,
+		"name": "Kitchen sink",
+		"sku": "67890"
+	},
+	{
+		"id": 3,
+		"name": "Shower head",
+		"sku": "11223"
+	},
+	{
+		"id": 4,
+		"name": "Toilet bowl",
+		"sku": "44556"
+	},
+	{
+		"id": 5,
+		"name": "Bath tub",
+		"sku": "78901"
+	},
+	{
+		"id": 6,
+		"name": "Tile cleaner",
+		"sku": "23456"
+	},
+	{
+		"id": 7,
+		"name": "Mirror cabinet",
+		"sku": "34567"
+	},
+	{
+		"id": 8,
+		"name": "Towel rack",
+		"sku": "45678"
+	},
+	{
+		"id": 9,
+		"name": "Soap dispenser",
+		"sku": "56789"
+	},
+	{
+		"id": 10,
+		"name": "Toilet paper holder",
+		"sku": "67891"
+	}
+]
