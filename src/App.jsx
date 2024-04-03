@@ -7,58 +7,43 @@ import Search from "./Search";
 
 // ✅ Allow the user to search for a product and add it to the quote in the form of a line item.
 // ✅ Each line item should display the name, sku, quantity, unit price and total price.
-// Display the subtotal, discounts, taxes, and total of the quote
+// ✅Display the subtotal, discounts, taxes, and total of the quote
 // ✅ As a user modifies the quantity or unit price of a line item, update the total price for the line item.
 // ✅ As a user modifies the quantity or unit price of a line item, update the subtotal, discounts, taxes, and total of the quote.
-// Discounts and taxes can be whole number values (don't worry about percentages) and are applied to the whole quote, not at the line item level.
-
+// ✅ Discounts and taxes can be whole number values (don't worry about percentages) and are applied to the whole quote, not at the line item level.
+const initialQuote = {
+	subtotal: 0,
+	discounts: 0,
+	taxes: 0,
+	total: 0,
+	lineItems: [
+		{
+			name: "Bathroom faucet",
+			sku: "12345",
+			quantity: null,
+			unit_price: null,
+			total_price: null,
+			product_id: 1,
+		},
+		{
+			name: "Soap dispenser",
+			sku: "56789",
+			quantity: null,
+			unit_price: null,
+			total_price: null,
+			product_id: 9,
+		},
+	],
+};
 export default function App() {
-	const initialQuote = {
-		subtotal: 0,
-		discounts: 0,
-		taxes: 0,
-		total: 0,
-		lineItems: [
-			{
-				name: "Bathroom faucet",
-				sku: "12345",
-				quantity: null,
-				unit_price: null,
-				total_price: null,
-				product_id: 1,
-			},
-			{
-				name: "Soap dispenser",
-				sku: "56789",
-				quantity: null,
-				unit_price: null,
-				total_price: null,
-				product_id: 9,
-			},
-		],
-	};
 	const [list, setList] = useState(initialQuote);
 	const [value, setValue] = useState({});
 	const [newItem, setNewItem] = useState({});
+	const [tax, setTax] = useState(0);
+	const [discount, setDiscount] = useState(0);
+	const priceRef = useRef(0);
+	const qtyRef = useRef("");
 	let newSubTotalArr = [];
-	let updatedSubtotal;
-
-	// useEffect(() => {
-	// 	getSubtotal();
-	// 	console.log(list);
-	// }, [list]);
-
-	const getSubtotal = () => {
-		// whenever an item is added or removed, update the subtotal
-		list.lineItems.forEach((item) => {
-			if (item.total_price !== null && item.total_price !== undefined) {
-				newSubTotalArr.push(item.total_price);
-			}
-		});
-		updatedSubtotal = newSubTotalArr.reduce((acc, curr) => acc + curr, 0);
-
-		return setList({ ...list, subtotal: updatedSubtotal });
-	};
 
 	const handleAdd = () => {
 		// check if newItem.name exists in array
@@ -70,44 +55,65 @@ export default function App() {
 			const newList = list.lineItems.map((item) => {
 				if (item.name === newItem.name) {
 					item.quantity = item.quantity + 1;
-					item.unit_price = 6; //arbitrary
 					item.total_price = item.unit_price * item.quantity;
 				}
 				return item;
 			});
-
 			return setList({ ...list, lineItems: newList });
 		}
 
+		//if it doesn't exist, update newItem quanity to 1
+		newItem.quantity = newItem.quantity + 1;
 		const newList = [...list.lineItems, newItem];
+
 		return setList({ ...list, lineItems: newList });
 	};
 
-	const handleDecrease = (index) => {
-		// if item quanity is 1 in array and decreases to 0, remove from lineItems
-		if (list.lineItems[index].quantity === 1) {
-			const updatedList = list.lineItems;
-			updatedList.splice(index, 1);
-			return setList({ ...list, lineItems: updatedList });
-		}
-
-		const updatedList = list.lineItems;
-		updatedList[index].quantity--;
-		updatedList[index].total_price =
-			updatedList[index].quantity * updatedList[index].unit_price;
-
-		return setList({ ...list, lineItems: updatedList });
+	const handlePriceChange = (id) => {
+		const newList = list.lineItems.map((item) => {
+			// update the unit price based on the ID of the
+			if (item.product_id === id) {
+				item.unit_price = priceRef.current[id].value;
+				item.total_price =
+					item.quantity === null
+						? item.unit_price
+						: item.unit_price * item.quantity;
+			}
+			return item;
+		});
+		return setList({ ...list, lineItems: newList });
 	};
 
-	const handleIncrease = (index) => {
-		//this differs from handleAdd as it only increases the units
-		const updatedList = list.lineItems;
-		updatedList[index].quantity++;
-		updatedList[index].total_price =
-			updatedList[index].quantity * updatedList[index].unit_price;
-
-		return setList({ ...list, lineItems: updatedList });
+	const handleQtyChange = (id) => {
+		const newList = list.lineItems.map((item) => {
+			if (item.product_id === id) {
+				//update the qty based on the ID of the product
+				item.quantity = qtyRef.current[id].value;
+				item.total_price =
+					item.total_price === undefined ? 0 : item.unit_price * item.quantity;
+			}
+			return item;
+		});
+		return setList({ ...list, lineItems: newList });
 	};
+
+	//every time the total price of the item changes, push to the array and calculate the total
+	list.lineItems.forEach((item) => {
+		return newSubTotalArr.push(item.total_price);
+	});
+	const updatedSubtotal = newSubTotalArr.reduce((acc, curr) => acc + curr, 0);
+
+	useEffect(() => {
+		//update the data object based on the variables changing state
+		const taxToNum = tax < 10 ? `1.0${tax}` : `1.${tax}`;
+		const discountToNum = discount < 10 ? `1.0${discount}` : `1.${discount}`;
+		setList({
+			...list,
+			subtotal: updatedSubtotal,
+			total: ((updatedSubtotal / discountToNum) * taxToNum).toFixed(2),
+		});
+	}, [updatedSubtotal, tax, discount]);
+
 	return (
 		<div className="App">
 			<Search
@@ -119,7 +125,7 @@ export default function App() {
 				handleAdd={handleAdd}
 				setNewItem={(val) => setNewItem(val)}
 			/>
-			-------------------------------------------------------------------------
+			<h2>Build your Quote</h2>
 			<table>
 				<tbody>
 					<tr>
@@ -129,49 +135,86 @@ export default function App() {
 						<th>Unit Price</th>
 						<th>Total Price</th>
 					</tr>
-					{list.lineItems.map((item, idx) => {
-						{
-							/* don't show items if the quanity, total price, or unit price is null */
-						}
-						if (
-							item.quantity !== null ||
-							item.total_price !== null ||
-							item.unit_price !== null
-						)
-							return (
-								<tr key={item.product_id}>
-									<td>{item.name}</td>
-									<td>{item.sku}</td>
-									<td>{item.quantity}</td>
-									<td>{item.unit_price}</td>
-									<td>{item.total_price}</td>
-									<td>
-										<button type="button" onClick={() => handleDecrease(idx)}>
-											-
-										</button>
-									</td>
-									<td>
-										<button type="button" onClick={() => handleIncrease(idx)}>
-											+
-										</button>
-									</td>
-								</tr>
-							);
+					{list.lineItems.map((item) => {
+						return (
+							<tr key={item.product_id}>
+								<td>{item.name}</td>
+								<td>{item.sku}</td>
+								<td>
+									<input
+										type="number"
+										min="0"
+										placeholder="Insert Quantity"
+										name={item.product_id}
+										label={item.name}
+										ref={(ref) =>
+											(qtyRef.current = {
+												...qtyRef.current,
+												[item.product_id]: ref,
+											})
+										}
+										value={item.quantity == null ? "" : item.quantity}
+										onChange={() => handleQtyChange(item.product_id)}
+									/>
+								</td>
+								<td>
+									<input
+										type="number"
+										min="0"
+										placeholder="Insert Unit Price"
+										name={item.product_id}
+										label={item.name}
+										ref={(ref) =>
+											(priceRef.current = {
+												...priceRef.current,
+												[item.product_id]: ref,
+											})
+										}
+										onChange={() => handlePriceChange(item.product_id)}
+									/>
+								</td>
+								<td>
+									{item.total_price !== null || item.total_price > 0
+										? `$${item.total_price.toFixed(2)}`
+										: "$0.00"}
+								</td>
+							</tr>
+						);
 					})}
 				</tbody>
+			</table>
+			<table className="subtotal">
 				<tbody>
 					<tr>
-						<th>Subtotal</th>
-						<th>Discounts</th>
-						<th>Taxes</th>
-						<th>Total</th>
+						<th>Subtotal ($)</th>
+						<th>Discounts (%)</th>
+						<th>Taxes (%)</th>
+						<th>Total ($)</th>
 					</tr>
 					<tr>
-						<td>{list.subtotal}</td>
-						<td></td>
-						<td></td>
-						<td></td>
-						<td></td>
+						<td>${list.subtotal.toFixed(2)}</td>
+						<td>
+							<input
+								type="number"
+								min="0"
+								name={discount}
+								value={discount}
+								id=""
+								placeholder="Discounts"
+								onChange={(e) => setDiscount(e.target.value)}
+							/>
+						</td>
+						<td>
+							<input
+								type="number"
+								min="0"
+								name={tax}
+								value={tax}
+								placeholder="% Tax"
+								onChange={(e) => setTax(e.target.value)}
+							/>
+						</td>
+						<td>${list.total}</td>
 					</tr>
 				</tbody>
 			</table>

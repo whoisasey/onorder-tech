@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-// from https://codesandbox.io/p/sandbox/searchable-dropdown-omxyr
+// adapted from https://codesandbox.io/p/sandbox/searchable-dropdown-omxyr
 const Search = ({
 	options,
 	label,
@@ -21,16 +21,14 @@ const Search = ({
 	}, []);
 
 	const selectOption = (option) => {
-		const unitPrice = 6;
-		const qty = 1;
-		const totalPrice = qty * unitPrice;
+		// get the selected list item and create a new Item object that will be pushed into the initialQuote
 		const newItem = {
 			name: option.name,
 			sku: option.sku,
 			product_id: option.id,
-			quantity: qty,
-			unit_price: unitPrice,
-			total_price: totalPrice,
+			quantity: null,
+			unit_price: null,
+			total_price: null,
 		};
 		setQuery(() => "");
 		handleChange(option[label]);
